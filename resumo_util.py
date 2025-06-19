@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.callbacks import get_openai_callback
+#from langchain.callbacks import get_openai_callback
 
 # === 1. Funções para converter e extrair notícias ===
 
@@ -109,14 +109,10 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
 
 def resumir_noticias(noticias_dict):
     resumos = {}
-    with get_openai_callback() as cb:
-        for chave, noticia in noticias_dict.items():
-            #print(f"\n{chave.upper()} (preview):\n{noticia[:300]}...\n")  # Mostra os primeiros 300 caracteres
-            try:
-                resumo = chain.invoke({'noticia': noticia})
-                resumos[quase_chave := chave.replace("noticia", "resumo")] = resumo
-            except Exception as e:
-                resumos[quase_chave] = f"Erro ao resumir: {e}"
-        print(f"\nTokens usados: {cb.total_tokens}")
-        print(f"Custo estimado (USD): ${cb.total_cost:.6f}")
+    for chave, noticia in noticias_dict.items():
+        try:
+            resumo = chain.invoke({'noticia': noticia})
+            resumos[chave.replace("noticia", "resumo")] = resumo
+        except Exception as e:
+            resumos[chave.replace("noticia", "resumo")] = f"[ERRO] {e}"
     return resumos
