@@ -143,15 +143,15 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
 
         link = buscar_link_google(titulo, veiculo)
 
-        # Adiciona título + hyperlink
-        doc.add_heading(f'{i:02d}.', level=2)
+        # Adiciona o título
+        doc.add_heading(f'{i:02d}. {titulo}', level=2)
 
+        # Adiciona o link (caso exista)
         if link and link.startswith("http"):
-            p = doc.add_paragraph()
-            add_hyperlink(p, titulo, link)
-        else:
-            doc.add_paragraph(titulo)
+            p_link = doc.add_paragraph()
+            add_hyperlink(p_link, link, link)
 
+        # Adiciona o resumo
         p = doc.add_paragraph(resumo)
         p.style.font.size = Pt(11)
 
