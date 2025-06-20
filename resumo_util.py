@@ -7,21 +7,6 @@ from langchain_core.prompts import ChatPromptTemplate
 import requests
 #from langchain.callbacks import get_openai_callback
 
-def buscar_link_google(titulo, veiculo):
-    api_key = os.getenv("GOOGLE_API_KEY")
-    cx = os.getenv("GOOGLE_CX")
-    query = f'"{titulo}" +{veiculo}'
-    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d3"
-
-    try:
-        res = requests.get(url)
-        data = res.json()
-        if "items" in data and data["items"]:
-            return data["items"][0]["link"]
-    except Exception as e:
-        print(f"[Erro na busca Google] {e}")
-    return "[link não encontrado]"
-
 # === 1. Funções para converter e extrair notícias ===
 
 '''def converter_doc_para_docx(caminho_doc):
@@ -98,6 +83,10 @@ chain = prompt | ChatOpenAI() | StrOutputParser()
 
 from docx import Document
 from docx.shared import Pt
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+import os
+import requests
 
 '''def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resumos.docx'):
     doc = Document()
@@ -121,6 +110,56 @@ from docx.shared import Pt
     doc.save(caminho_saida)
     print(f"\nArquivo Word exportado com sucesso para: {os.path.abspath(caminho_saida)}")'''
 
+# 🔍 Função de busca no Google
+def buscar_link_google(titulo, veiculo):
+    api_key = os.getenv("GOOGLE_API_KEY")
+    cx = os.getenv("GOOGLE_CX")
+    query = f'"{titulo}" +{veiculo}'
+    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d3"
+
+    try:
+        res = requests.get(url)
+        data = res.json()
+        if "items" in data and data["items"]:
+            return data["items"][0]["link"]
+    except Exception as e:
+        print(f"[Erro na busca Google] {e}")
+    return None
+
+# 🔗 Função para inserir link clicável
+def add_hyperlink(paragraph, text, url):
+    part = paragraph.part
+    r_id = part.relate_to(
+        url,
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+        is_external=True
+    )
+
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), r_id)
+
+    new_run = OxmlElement('w:r')
+    rPr = OxmlElement('w:rPr')
+
+    # Estiliza o link (azul e sublinhado)
+    color = OxmlElement('w:color')
+    color.set(qn('w:val'), "0000FF")
+    rPr.append(color)
+
+    underline = OxmlElement('w:u')
+    underline.set(qn('w:val'), "single")
+    rPr.append(underline)
+
+    new_run.append(rPr)
+
+    text_elem = OxmlElement('w:t')
+    text_elem.text = text
+    new_run.append(text_elem)
+
+    hyperlink.append(new_run)
+    paragraph._p.append(hyperlink)
+
+# 📝 Função principal exportando título + link + resumo
 def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resumos.docx'):
     doc = Document()
     doc.add_heading('Resumos das Notícias', level=1)
@@ -138,8 +177,15 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
 
         link = buscar_link_google(titulo, veiculo)
 
-        doc.add_heading(f'{i:02d}. {titulo}', level=2)
-        doc.add_paragraph(f"🔗 {link}")
+        # Adiciona título + hyperlink
+        doc.add_heading(f'{i:02d}.', level=2)
+        if link:
+            p = doc.add_paragraph()
+            add_hyperlink(p, titulo, link)
+        else:
+            doc.add_paragraph(titulo)
+
+        # Adiciona resumo
         p = doc.add_paragraph(resumo)
         p.style.font.size = Pt(11)
 
