@@ -115,7 +115,7 @@ def buscar_link_google(titulo, veiculo):
     api_key = os.getenv("GOOGLE_API_KEY")
     cx = os.getenv("GOOGLE_CX")
     query = f'"{titulo}" +{veiculo}'
-    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d3"
+    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d30"
 
     try:
         res = requests.get(url)
