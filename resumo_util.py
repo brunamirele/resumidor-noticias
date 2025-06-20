@@ -148,8 +148,10 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
 
         # Adiciona o link (caso exista)
         if link and link.startswith("http"):
-            p_link = doc.add_paragraph(link)
-            p_link.style.font.size = Pt(9)
+            p_link = doc.add_paragraph()
+            run = p_link.add_run(link)
+            run.font.size = Pt(9)
+            run.font.underline = True  # Mantém sublinhado (se quiser tirar, remova esta linha)
 
         # Adiciona o resumo
         p = doc.add_paragraph(resumo)
