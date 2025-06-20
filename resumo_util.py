@@ -164,8 +164,6 @@ from docx.shared import Pt, RGBColor
 
 def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resumos.docx'):
     doc = Document()
-    
-    # Título principal do documento
     doc.add_heading('Resumos das Notícias', level=1)
 
     for i in range(1, len(noticias_dict) + 1):
@@ -177,35 +175,34 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
 
         linhas = noticia.split('\n')
         titulo = linhas[0] if len(linhas) > 0 else '[Título não encontrado]'
-        veiculo = linhas[2] if len(linhas) > 2 else ''
+        veiculo = linhas[2] if len(linhas) > 2 else '[Veículo não identificado]'
 
-        # Buscar link no Google
         link = buscar_link_google(titulo, veiculo)
+        print(f"[DEBUG] Link retornado: {link}")
 
-        # 👉 Adicionar título como run para aplicar cor preta
+        # Parágrafo do título com link embutido e negrito
         p_titulo = doc.add_paragraph()
-        run_titulo = p_titulo.add_run(f'{i:02d}. {titulo}')
-        run_titulo.bold = True
-        run_titulo.font.size = Pt(14)
-        run_titulo.font.color.rgb = RGBColor(0, 0, 0)  # PRETO
+        p_titulo.style.font.size = Pt(11)
 
-        # 👉 Adicionar link logo abaixo (como texto simples)
         if link and link.startswith("http"):
-            p_link = doc.add_paragraph()
-            run_link = p_link.add_run(link)
-            run_link.font.size = Pt(9)
-            run_link.font.color.rgb = RGBColor(0, 0, 255)  # azul claro padrão de link, opcional
-            run_link.underline = True
+            run = p_titulo.add_run(f"{i:02d}. {titulo}")
+            run.bold = True
 
-        # 👉 Adicionar resumo
-        p_resumo = doc.add_paragraph(resumo)
-        p_resumo.style.font.size = Pt(11)
+            # Transforma o run anterior em hyperlink
+            add_hyperlink(p_titulo, run.text, link)
 
-    # Salvar
+            # Remove o run de texto puro (duplicado) depois de inserir como link
+            p_titulo.clear()
+        else:
+            run = p_titulo.add_run(f"{i:02d}. {titulo}")
+            run.bold = True
+
+        # Parágrafo do resumo
+        p = doc.add_paragraph(resumo)
+        p.style.font.size = Pt(11)
+
     doc.save(caminho_saida)
     print(f"\nArquivo Word exportado com sucesso para: {os.path.abspath(caminho_saida)}")
-    print(f"[DEBUG] Adicionando título e link da notícia {i}")
-
 
 # === 4. Executar todo o processo: leitura, resumo e exibição ===
 def resumir_noticias(noticias_dict):
