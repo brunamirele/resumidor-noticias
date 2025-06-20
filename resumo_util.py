@@ -178,26 +178,20 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
         veiculo = linhas[2] if len(linhas) > 2 else '[Veículo não identificado]'
 
         link = buscar_link_google(titulo, veiculo)
-        print(f"[DEBUG] Link retornado: {link}")
 
-        # Parágrafo do título com link embutido e negrito
+        # TÍTULO: parágrafo com texto normal + negrito
         p_titulo = doc.add_paragraph()
+        run = p_titulo.add_run(f'{i:02d}. {titulo}')
+        run.bold = True
         p_titulo.style.font.size = Pt(11)
 
+        # LINK: parágrafo separado com hiperlink clicável
         if link and link.startswith("http"):
-            run = p_titulo.add_run(f"{i:02d}. {titulo}")
-            run.bold = True
+            p_link = doc.add_paragraph()
+            add_hyperlink(p_link, link, link)  # texto do link = o próprio link
+            p_link.style.font.size = Pt(9)
 
-            # Transforma o run anterior em hyperlink
-            add_hyperlink(p_titulo, run.text, link)
-
-            # Remove o run de texto puro (duplicado) depois de inserir como link
-            p_titulo.clear()
-        else:
-            run = p_titulo.add_run(f"{i:02d}. {titulo}")
-            run.bold = True
-
-        # Parágrafo do resumo
+        # RESUMO
         p = doc.add_paragraph(resumo)
         p.style.font.size = Pt(11)
 
