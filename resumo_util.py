@@ -112,9 +112,9 @@ import requests
 
 # 🔍 Função de busca no Google
 def buscar_link_google(titulo, veiculo):
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GOOGLE_SEARCH_API_KEY")
     cx = os.getenv("GOOGLE_CX")
-    query = f'"{titulo}" +{veiculo}'
+    query = f'"{titulo}" {veiculo}'
     url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d30"
 
     try:
