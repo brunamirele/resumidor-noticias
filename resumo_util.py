@@ -68,16 +68,28 @@ import requests
 def buscar_link_google(titulo, veiculo):
     api_key = os.getenv("GOOGLE_SEARCH_API_KEY")
     cx = os.getenv("GOOGLE_CX")
-    query = f'"{titulo}"'
+    
+    # Inclui tanto título quanto veículo para maior precisão (sem aspas)
+    query = f'"{titulo}"' #{veiculo}'
+    
     url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d30"
 
     try:
         res = requests.get(url)
         data = res.json()
+
+        total = data.get("searchInformation", {}).get("totalResults")
+        print(f"[DEBUG] totalResults: {total}")
+
         if "items" in data and data["items"]:
-            return data["items"][0]["link"]
+            primeiro_link = data["items"][0]["link"]
+            print(f"[DEBUG] Link retornado: {primeiro_link}")
+            return primeiro_link
+        else:
+            print("[DEBUG] Nenhum item encontrado na resposta.")
     except Exception as e:
-        print(f"[Erro na busca Google] {e}")
+        print(f"[ERRO] Falha ao buscar no Google: {e}")
+    
     return None
 
 # 🔗 Função para inserir link clicável
@@ -133,13 +145,13 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
 
         # Adiciona título + hyperlink
         doc.add_heading(f'{i:02d}.', level=2)
-        if link:
+
+        if link and link.startswith("http"):
             p = doc.add_paragraph()
             add_hyperlink(p, titulo, link)
         else:
             doc.add_paragraph(titulo)
 
-        # Adiciona resumo
         p = doc.add_paragraph(resumo)
         p.style.font.size = Pt(11)
 
