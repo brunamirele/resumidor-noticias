@@ -204,6 +204,7 @@ def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resum
     # Salvar
     doc.save(caminho_saida)
     print(f"\nArquivo Word exportado com sucesso para: {os.path.abspath(caminho_saida)}")
+    print(f"[DEBUG] Adicionando título e link da notícia {i}")
 
 
 # === 4. Executar todo o processo: leitura, resumo e exibição ===
