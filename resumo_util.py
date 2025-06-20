@@ -74,6 +74,10 @@ def buscar_link_google(titulo, veiculo):
     
     url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&dateRestrict=d30"
 
+    dominios_bloqueados = [
+        "instagram.com", "facebook.com", "twitter.com", "x.com", "linkedin.com"
+    ]
+
     try:
         res = requests.get(url)
         data = res.json()
@@ -82,9 +86,15 @@ def buscar_link_google(titulo, veiculo):
         print(f"[DEBUG] totalResults: {total}")
 
         if "items" in data and data["items"]:
-            primeiro_link = data["items"][0]["link"]
+            '''primeiro_link = data["items"][0]["link"]
             print(f"[DEBUG] Link retornado: {primeiro_link}")
-            return primeiro_link
+            return primeiro_link'''
+            for item in data["items"]:
+                link = item.get("link", "")
+                if not any(dom in link for dom in dominios_bloqueados):
+                    print(f"[DEBUG] Link válido encontrado: {link}")
+                    return link
+            print("[DEBUG] Todos os links encontrados foram de redes sociais.")
         else:
             print("[DEBUG] Nenhum item encontrado na resposta.")
     except Exception as e:
@@ -126,40 +136,6 @@ def add_hyperlink(paragraph, text, url):
     paragraph._p.append(hyperlink)
 
 # 📝 Função principal exportando título + link + resumo
-'''def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resumos.docx'):
-    doc = Document()
-    doc.add_heading('Resumos das Notícias', level=1)
-
-    for i in range(1, len(noticias_dict) + 1):
-        noticia_key = f'noticia{i}'
-        resumo_key = f'resumo{i}'
-
-        noticia = noticias_dict.get(noticia_key, '')
-        resumo = resumos_dict.get(resumo_key, '[Resumo não disponível]')
-
-        linhas = noticia.split('\n')
-        titulo = linhas[0] if len(linhas) > 0 else '[Título não encontrado]'
-        veiculo = linhas[2] if len(linhas) > 2 else '[Veículo não identificado]'
-
-        link = buscar_link_google(titulo, veiculo)
-
-        # Adiciona o título
-        doc.add_heading(f'{i:02d}. {titulo}', level=2)
-
-        # Adiciona o link (caso exista)
-        if link and link.startswith("http"):
-            p_link = doc.add_paragraph()
-            run = p_link.add_run(link)
-            run.font.size = Pt(9)
-            run.font.underline = True  # Mantém sublinhado (se quiser tirar, remova esta linha)
-
-        # Adiciona o resumo
-        p = doc.add_paragraph(resumo)
-        p.style.font.size = Pt(11)
-
-    doc.save(caminho_saida)
-    print(f"\nArquivo Word exportado com sucesso para: {os.path.abspath(caminho_saida)}")'''
-
 from docx.shared import Pt, RGBColor
 
 def exportar_resumos_para_word(noticias_dict, resumos_dict, caminho_saida='resumos.docx'):
